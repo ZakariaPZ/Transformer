@@ -22,7 +22,7 @@ class LayerNorm(nn.Module):
         return x
 
 
-class feedforward(nn.Module):
+class PositionWiseFFN(nn.Module):
     def __init__(self, d_model, d_hidden, dropout):
         super().__init__()
 
