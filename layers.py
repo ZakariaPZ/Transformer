@@ -1,12 +1,13 @@
 import torch
 from torch import nn
 
+
 class LayerNorm(nn.Module):
     def __init__(self, d_model, eps=1e-6):
         super().__init__()
 
         # Define alpha and beta as learnable parameters
-        self.gamma = torch.nn.Parameter(torch.tensor([1., 2., 3.])) 
+        self.gamma = torch.nn.Parameter(torch.ones(d_model)) 
         self.beta = torch.nn.Parameter(torch.zeros(d_model))
         self.eps = eps 
     
