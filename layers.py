@@ -26,11 +26,13 @@ class feedforward(nn.Module):
         super().__init__()
 
         # Input is of shape (batch_size, seq_len, d_model)
+        # Output should have the same shape - we just want to improve the representational
+        # power of the model by adding non-linear transformations
         self.linear1 = nn.Linear(d_model, d_hidden)
         self.linear2 = nn.Linear(d_hidden, d_model)
 
         self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(dropout)  # Apply dropout after ReLU
 
     def forward(self, x):
         x = self.linear1(x)
