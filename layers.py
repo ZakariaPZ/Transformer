@@ -7,13 +7,9 @@ class LayerNorm(nn.Module):
         super().__init__()
 
         # define alpha and beta as learnable parameters
-        gamma = torch.nn.Parameter(torch.tensor([1., 2., 3.])) 
-        beta = torch.nn.Parameter(torch.zeros(d_model))
-        self.register_parameter('gamma', gamma)
-        self.register_parameter('beta', beta)
-
+        self.gamma = torch.nn.Parameter(torch.tensor([1., 2., 3.])) 
+        self.beta = torch.nn.Parameter(torch.zeros(d_model))
         self.eps = eps 
-
     
     def forward(self, x):
         # calculate mean and variance of activations 
@@ -24,4 +20,3 @@ class LayerNorm(nn.Module):
         x = (x - mean) / (torch.sqrt(var) + 1e-6) # normalize activations
         x = self.gamma * x + self.beta  # scale and shift activations
         return x
-    
