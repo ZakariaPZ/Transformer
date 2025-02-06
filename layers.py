@@ -45,14 +45,14 @@ class PositionWiseFFN(nn.Module):
 
 
 class SinusoidalPositionalEncoding(nn.Module):
-    def __init__(self, d_model):
+    def __init__(self, d_model, max_len=10000):
         super().__init__()
         
-        positions = torch.arange(10000).float().unsqueeze(1)  # (10000, 1)
+        positions = torch.arange(max_len).float().unsqueeze(1)  # (10000, 1)
         embedding_indices = torch.arange(0, d_model, 2).float().unsqueeze(0)  # (1, d_model)
-        div_term = torch.exp(-(embedding_indices / d_model) * math.log(10000))  # (1, d_model)
+        div_term = torch.exp(-(embedding_indices / d_model) * math.log(max_len))  # (1, d_model)
 
-        self.pe = torch.zeros(10000, d_model)
+        self.pe = torch.zeros(max_len, d_model)
         # broadcast (10000, 1) and (1, d_model) to get (10000, d_model)
         self.pe[:, ::2] = torch.sin(positions * div_term)  
         self.pe[:, 1::2] = torch.cos(positions * div_term)
