@@ -25,9 +25,10 @@ class Attention(nn.Module):
         self.W_o = nn.Linear(d_v * n_heads, d_model)
 
     def forward(self, x): 
-        q = self.W_q(x).reshape(x.shape[0], x.shape[1], self.n_heads, self.d_q).transpose(1, 2)  # (batch_size, n_heads, seq_len, d_q)
-        k = self.W_k(x).reshape(x.shape[0], x.shape[1], self.n_heads, self.d_k).transpose(1, 2)  # (batch_size, n_heads, seq_len, d_k)
-        v = self.W_v(x).reshape(x.shape[0], x.shape[1], self.n_heads, self.d_v).transpose(1, 2)  # (batch_size, n_heads, seq_len, d_v)
+        batch_size, seq_len, _, _ = x.size()
+        q = self.W_q(x).reshape(batch_size, seq_len, self.n_heads, self.d_q).transpose(1, 2)  # (batch_size, n_heads, seq_len, d_q)
+        k = self.W_k(x).reshape(batch_size, seq_len, self.n_heads, self.d_k).transpose(1, 2)  # (batch_size, n_heads, seq_len, d_k)
+        v = self.W_v(x).reshape(batch_size, seq_len, self.n_heads, self.d_v).transpose(1, 2)  # (batch_size, n_heads, seq_len, d_v)
 
         scaling_factor = math.sqrt(self.d_q)  # Scaling factor for softmax
 
@@ -35,4 +36,5 @@ class Attention(nn.Module):
         # Multiplying with v is of shape (batch_size, n_heads, seq_len, d_v)
         y = self.softmax(q @ k.transpose(-1, -2) / scaling_factor) @ v
         y = y.transpose(1, 2).reshape(y.shape[0], y.shape[2], self.n_heads * self.d_v)  # (batch_size, seq_len, n_heads * d_v)
-        return self.W_o(y)
+        return self.W_o(y)  # (batch_size, seq_len, d_model)
+    
