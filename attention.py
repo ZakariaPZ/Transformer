@@ -3,7 +3,7 @@ from torch import nn
 import math 
 
 
-class Attention(nn.Module):
+class MultiHeadAttention(nn.Module):
     
     def __init__(self, n_heads, d_model, d_q, d_k, d_v):
         super().__init__() 
@@ -24,17 +24,23 @@ class Attention(nn.Module):
         self.W_v = nn.Linear(d_model, d_v * n_heads)
         self.W_o = nn.Linear(d_v * n_heads, d_model)
 
-    def forward(self, x): 
-        batch_size, seq_len, _, _ = x.size()
+    def forward(self, x, mask=None): 
+        batch_size, seq_len, _ = x.size()
         q = self.W_q(x).reshape(batch_size, seq_len, self.n_heads, self.d_q).transpose(1, 2)  # (batch_size, n_heads, seq_len, d_q)
         k = self.W_k(x).reshape(batch_size, seq_len, self.n_heads, self.d_k).transpose(1, 2)  # (batch_size, n_heads, seq_len, d_k)
         v = self.W_v(x).reshape(batch_size, seq_len, self.n_heads, self.d_v).transpose(1, 2)  # (batch_size, n_heads, seq_len, d_v)
 
         scaling_factor = math.sqrt(self.d_q)  # Scaling factor for softmax
-
         # q @ k.T is of shape (batch_size, n_heads, seq_len, seq_len)
+        attention_logits = q @ k.transpose(-1, -2) / scaling_factor
+
+        if mask is not None:
+            # Mask should be lower triangular - anything above the diagonal is 0
+            # to prevent tokens from attending to future tokens.
+            attention_logits = attention_logits.masked_fill(mask == 0, float('-inf'))
+
+        attention_weights = self.softmax(attention_logits)
         # Multiplying with v is of shape (batch_size, n_heads, seq_len, d_v)
-        y = self.softmax(q @ k.transpose(-1, -2) / scaling_factor) @ v
+        y = attention_weights @ v
         y = y.transpose(1, 2).reshape(y.shape[0], y.shape[2], self.n_heads * self.d_v)  # (batch_size, seq_len, n_heads * d_v)
         return self.W_o(y)  # (batch_size, seq_len, d_model)
-    
