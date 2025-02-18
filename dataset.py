@@ -22,6 +22,3 @@ def build_data(file_path):
         train_dataset = encode(dataset, char_to_idx)
 
     return char_to_idx, idx_to_char, vocab_size, train_dataset
-
-file_path = os.path.join('data', 'train.csv')
-char_to_idx, idx_to_char, vocab_size, train_data = build_data(train_file_path=file_path, split_percentage=1)
