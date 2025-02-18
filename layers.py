@@ -52,10 +52,12 @@ class SinusoidalPositionalEncoding(nn.Module):
         embedding_indices = torch.arange(0, d_model, 2).float().unsqueeze(0)  # (1, d_model)
         div_term = torch.exp(-(embedding_indices / d_model) * math.log(max_len))  # (1, d_model)
 
-        self.pe = torch.zeros(max_len, d_model)
+        pe = torch.zeros(max_len, d_model)
         # broadcast (10000, 1) and (1, d_model) to get (10000, d_model)
-        self.pe[:, ::2] = torch.sin(positions * div_term)  
-        self.pe[:, 1::2] = torch.cos(positions * div_term)
+        pe[:, ::2] = torch.sin(positions * div_term)  
+        pe[:, 1::2] = torch.cos(positions * div_term)
+
+        self.register_buffer('pe', pe)
 
     def forward(self, x):
         seq_len = x.size(1)

@@ -81,7 +81,7 @@ class Decoder(nn.Module):
         for layer in self.layers:
             x = layer(x, mask)
 
-        return self.out_projection(x)
+        return self.out_projection(x)  # Return logits because Torch's BCE loss includes softmax 
         
 
 def create_causal_mask(seq_len):
