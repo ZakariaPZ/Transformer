@@ -23,15 +23,16 @@ class DecoderLayer(nn.Module):
     
     def forward(self, x, mask=None):
         # x is shape (seq_len, d_model)
-        attention_output = self.attention(x, mask)
-        x = x + self.dropout(attention_output)
-        # x is shape (seq_len, d_model)
+        residual = x
         x = self.layer_norm1(x)
+        x = self.attention(x, mask)
+        x = residual + self.dropout(x)
         # x is shape (seq_len, d_model)
-        ffn_output = self.linear(x)
-        x = x + ffn_output
-        # ffn_output is of shape (seq_len, d_model)
+        residual = x
         x = self.layer_norm2(x)
+        x = self.linear(x) 
+        x = residual + self.dropout(x)
+        # ffn_output is of shape (seq_len, d_model)
         return x
     
 
@@ -60,6 +61,8 @@ class Decoder(nn.Module):
             DecoderLayer(n_heads, d_model, d_hidden, dropout) for _ in range(n_layers)
         ])
 
+        self.layer_norm = LayerNorm(d_model)
+
         self.out_projection = nn.Linear(d_model, vocab_size)
 
         self.dropout = nn.Dropout(dropout)
@@ -80,7 +83,7 @@ class Decoder(nn.Module):
         # Process through decoder layers
         for layer in self.layers:
             x = layer(x, mask)
-
+        x = self.layer_norm(x)
         return self.out_projection(x)  # Return logits because Torch's BCE loss includes softmax 
         
 
