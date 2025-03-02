@@ -9,16 +9,23 @@ def decode(char_list, decoding_dict):
     return [decoding_dict[char] for char in char_list]
 
 
-def build_data(file_path):
-    with open(file_path, 'r', encoding='utf-8') as file:
+def build_data(train_path, val_path=None):
+    with open(train_path, 'r', encoding='utf-8') as file:
         dataset = file.read()
 
-        chars = sorted(set(dataset))
+        chars = sorted(list(set(dataset)))
         vocab_size = len(chars)
 
         char_to_idx = {char: i for i, char in enumerate(chars)}
         idx_to_char = {i: char for i, char in enumerate(chars)}
 
         train_dataset = encode(dataset, char_to_idx)
-
-    return char_to_idx, idx_to_char, vocab_size, train_dataset
+    
+    val_dataset = None
+    if val_path:
+        with open(val_path, 'r', encoding='utf-8') as file:
+            dataset = file.read()
+            val_dataset = encode(dataset, char_to_idx)
+    
+    return char_to_idx, idx_to_char, vocab_size, train_dataset, val_dataset
+        
