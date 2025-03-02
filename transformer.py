@@ -37,7 +37,7 @@ class DecoderLayer(nn.Module):
 
 class Decoder(nn.Module):
     def __init__(
-            self,
+            self, 
             vocab_size, 
             d_model, 
             d_hidden,
