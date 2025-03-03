@@ -16,8 +16,8 @@ class DecoderLayer(nn.Module):
         super().__init__()
 
         self.attention = MultiHeadAttention(n_heads, d_head, d_model)
-        self.layer_norm1 = nn.LayerNorm(d_model)
-        self.layer_norm2 = nn.LayerNorm(d_model)
+        self.layer_norm1 = LayerNorm(d_model)
+        self.layer_norm2 = LayerNorm(d_model)
         self.linear = PositionWiseFFN(d_model, d_hidden, dropout)
         self.dropout = nn.Dropout(dropout)
     
@@ -62,7 +62,7 @@ class Decoder(nn.Module):
             DecoderLayer(n_heads, d_head, d_model, d_hidden, dropout) for _ in range(n_layers)
         ])
 
-        self.layer_norm = nn.LayerNorm(d_model)
+        self.layer_norm = LayerNorm(d_model)
 
         self.out_projection = nn.Linear(d_model, vocab_size)
 
