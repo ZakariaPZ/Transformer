@@ -1,6 +1,5 @@
 from torch import nn 
-from layers import LayerNorm, PositionWiseFFN, SinusoidalPositionalEncoding
-from attention import MultiHeadAttention
+from layers import LayerNorm, PositionWiseFFN, SinusoidalPositionalEncoding, MultiHeadAttention
 import torch
 import math
 
@@ -9,30 +8,31 @@ class DecoderLayer(nn.Module):
     def __init__(
             self, 
             n_heads,
+            d_head,
             d_model,
             d_hidden,
             dropout
         ):
         super().__init__()
 
-        self.attention = MultiHeadAttention(n_heads, d_model, d_model, d_model, d_model)
-        self.layer_norm1 = LayerNorm(d_model)
-        self.layer_norm2 = LayerNorm(d_model)
+        self.attention = MultiHeadAttention(n_heads, d_head, d_model)
+        self.layer_norm1 = nn.LayerNorm(d_model)
+        self.layer_norm2 = nn.LayerNorm(d_model)
         self.linear = PositionWiseFFN(d_model, d_hidden, dropout)
         self.dropout = nn.Dropout(dropout)
     
     def forward(self, x, mask=None):
-        # x is shape (seq_len, d_model)
+        # x is shape (N, d_model)
         residual = x
-        x = self.layer_norm1(x)
-        x = self.attention(x, mask)
+        x = self.attention(self.layer_norm1(x), mask)
         x = residual + self.dropout(x)
-        # x is shape (seq_len, d_model)
+
+        # x is shape (N, d_model)
         residual = x
-        x = self.layer_norm2(x)
-        x = self.linear(x) 
+        x = self.linear(self.layer_norm2(x)) 
         x = residual + self.dropout(x)
-        # ffn_output is of shape (seq_len, d_model)
+        
+        # ffn_output is of shape (N, d_model)
         return x
     
 
@@ -41,6 +41,7 @@ class Decoder(nn.Module):
             self, 
             vocab_size, 
             d_model, 
+            d_head,
             d_hidden,
             n_heads,
             n_layers,
@@ -58,10 +59,10 @@ class Decoder(nn.Module):
         # Note: Can't use a normal list because it won't register the decoder layers
         # as modules of the Decoder class 
         self.layers = nn.ModuleList([
-            DecoderLayer(n_heads, d_model, d_hidden, dropout) for _ in range(n_layers)
+            DecoderLayer(n_heads, d_head, d_model, d_hidden, dropout) for _ in range(n_layers)
         ])
 
-        self.layer_norm = LayerNorm(d_model)
+        self.layer_norm = nn.LayerNorm(d_model)
 
         self.out_projection = nn.Linear(d_model, vocab_size)
 
@@ -85,7 +86,7 @@ class Decoder(nn.Module):
             x = layer(x, mask)
         x = self.layer_norm(x)
         return self.out_projection(x)  # Return logits because Torch's BCE loss includes softmax 
-        
-
+    
 def create_causal_mask(seq_len):
-    return torch.tril(torch.ones(seq_len, seq_len))
+    mask = torch.tril(torch.ones(seq_len, seq_len))
+    return mask.unsqueeze(0).unsqueeze(0)
