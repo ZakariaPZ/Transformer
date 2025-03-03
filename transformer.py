@@ -53,19 +53,14 @@ class Decoder(nn.Module):
         self.d_model = d_model
 
         self.embedding = nn.Embedding(vocab_size, d_model)
-
         self.positional_encoding = SinusoidalPositionalEncoding(d_model, max_len)
-
         # Note: Can't use a normal list because it won't register the decoder layers
         # as modules of the Decoder class 
         self.layers = nn.ModuleList([
             DecoderLayer(n_heads, d_head, d_model, d_hidden, dropout) for _ in range(n_layers)
         ])
-
         self.layer_norm = LayerNorm(d_model)
-
         self.out_projection = nn.Linear(d_model, vocab_size)
-
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x, mask):
